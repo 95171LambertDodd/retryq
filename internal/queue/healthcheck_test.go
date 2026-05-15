@@ -82,3 +82,20 @@ func TestHealthHandler_QueueSizeAndWorkers(t *testing.T) {
 		t.Errorf("worker count should be positive, got %d", status.Workers)
 	}
 }
+
+func TestHealthHandler_MethodNotAllowed_ContentType(t *testing.T) {
+	w := newTestWorker()
+	handler := HealthHandler(w)
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			req := httptest.NewRequest(method, "/health", nil)
+			rec := httptest.NewRecorder()
+			handler(rec, req)
+
+			if rec.Code != http.StatusMethodNotAllowed {
+				t.Errorf("expected 405 for %s, got %d", method, rec.Code)
+			}
+		})
+	}
+}
